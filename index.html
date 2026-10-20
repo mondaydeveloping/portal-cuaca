@@ -87,16 +87,22 @@
       </div>
 
       <!-- Running text peringatan -->
-      <div class="channel-ticker" role="region" aria-label="Peringatan dini cuaca">
-        <span class="ticker-label">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2zm1 15h-2v-2h2v2zm0-4h-2V9h2v4z"/></svg>
-          Peringatan Dini
-        </span>
-        <div class="ticker-track">
-          <p class="ticker-text">
-            Waspada potensi hujan lebat disertai kilat dan angin kencang di sebagian wilayah. Ikuti informasi resmi terbaru.
-          </p>
+      <!-- Panel cuaca: saat ini + 3 jam ke depan (diisi script.js dari API BMKG) -->
+      <div class="wx-panel" id="wx-panel" role="region" aria-label="Cuaca saat ini" data-state="loading">
+        <div class="wx-current">
+          <img class="wx-current-icon" id="wx-icon" alt="" hidden>
+          <div class="wx-current-body">
+            <p class="wx-eyebrow">Saat ini <span id="wx-time"></span></p>
+            <p class="wx-headline">
+              <span class="wx-temp" id="wx-temp">--°C</span>
+              <span class="wx-desc" id="wx-desc">Memuat prakiraan cuaca…</span>
+              <span class="wx-loc" id="wx-loc"></span>
+            </p>
+            <ul class="wx-chips" id="wx-chips"></ul>
+          </div>
         </div>
+        <ol class="wx-next" id="wx-next" aria-label="Prakiraan beberapa jam ke depan"></ol>
+        <p class="wx-credit">Sumber data: BMKG</p>
       </div>
     </section>
 
@@ -136,7 +142,7 @@
     <div class="container footer-grid">
       <div>
         <h2 class="footer-title">Portal Cuaca</h2>
-        <p>Jl. Angkasa I No.2 Kemayoran, Jakarta Pusat 10610, PO Box 3540 Jkt.<br>Telp. (021) 196</p>
+        <p>Jl. Angkasa I No.2 Kemayoran, Central Jakarta 10610, PO Box 3540 Jkt.<br>Telp. (021) 196</p>
         <p class="footer-note">
           Waktu resmi bersumber dari <a href="https://jam.bmkg.go.id/Jam.BMKG" target="_blank" rel="noopener">jam.bmkg.go.id</a>.
           Video dari playlist <a href="https://www.youtube.com/playlist?list=PL-k2VTQGAjdeCDZ-T9e6YJfdaRt28E-ym" target="_blank" rel="noopener">Prakiraan Cuaca Indonesia</a> — kanal YouTube Info BMKG.

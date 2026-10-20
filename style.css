@@ -217,26 +217,63 @@ h1, h2, h3 { font-family: var(--font-head); line-height: 1.25; margin: 0; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* --- Running text --- */
-.channel-ticker {
-  display: flex; align-items: stretch; flex-shrink: 0;
-  min-height: 44px; overflow: hidden;
-  background: var(--yellow-50); color: #3d2e00;
+/* --- Panel cuaca: saat ini + beberapa jam ke depan --- */
+.wx-panel {
+  position: relative; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 14px 28px 18px;
+  background: linear-gradient(100deg, #e4eafb 0%, #e8f2fb 55%, #ecf7fb 100%);
+  color: var(--navy-900);
+  border-top: 3px solid var(--yellow);
 }
-.ticker-label {
-  flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 0 16px;
-  background: var(--red); color: #fff;
-  font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .4px;
+.wx-current { display: flex; align-items: center; gap: 20px; min-width: 0; }
+.wx-current-icon { width: 84px; height: 84px; object-fit: contain; flex-shrink: 0; }
+.wx-current-body { min-width: 0; }
+.wx-eyebrow {
+  margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--muted);
 }
-.ticker-label svg { width: 16px; height: 16px; fill: currentColor; }
-.ticker-track { flex: 1; display: flex; align-items: center; overflow: hidden; }
-.ticker-text {
-  display: inline-block; margin: 0; padding-left: 100%;
-  white-space: nowrap; font-weight: 500; font-size: 15px;
-  animation: ticker 32s linear infinite;
+.wx-eyebrow span { font-weight: 500; letter-spacing: .3px; text-transform: none; margin-left: 6px; }
+.wx-headline { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 14px; margin: 2px 0 8px; }
+.wx-temp {
+  font-family: var(--font-head); font-weight: 800; line-height: 1;
+  font-size: clamp(34px, 3.6vw, 50px); letter-spacing: -1px; font-variant-numeric: tabular-nums;
 }
-.ticker-track:hover .ticker-text { animation-play-state: paused; }
-@keyframes ticker { to { transform: translateX(-100%); } }
+.wx-desc { font-size: clamp(16px, 1.5vw, 20px); font-weight: 500; }
+.wx-loc { font-size: clamp(14px, 1.3vw, 18px); color: var(--muted); }
+.wx-loc:empty { display: none; }
+.wx-loc::before { content: '•'; margin-right: 12px; }
+
+.wx-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.wx-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px;
+  border-radius: 8px; background: rgba(255,255,255,.72); border: 1px solid rgba(11,47,107,.08);
+  font-size: 13px; color: var(--muted); white-space: nowrap;
+}
+.wx-chip svg { width: 16px; height: 16px; fill: var(--navy-700); flex-shrink: 0; }
+.wx-chip strong { color: var(--navy-900); font-weight: 700; }
+
+.wx-next { list-style: none; margin: 0; padding: 0; display: flex; gap: 10px; flex-shrink: 0; }
+.wx-next:empty { display: none; }
+.wx-hour {
+  width: 108px; padding: 10px 8px; border-radius: 12px;
+  background: rgba(255,255,255,.75); border: 1px solid rgba(11,47,107,.08);
+  display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center;
+}
+.wx-hour-time { font-size: 13px; font-weight: 700; color: var(--navy-800); }
+.wx-hour-icon { width: 40px; height: 40px; object-fit: contain; }
+.wx-hour-temp { font-family: var(--font-head); font-weight: 800; font-size: 19px; line-height: 1.1; }
+.wx-hour-desc {
+  max-width: 100%; font-size: 12px; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.wx-credit { position: absolute; right: 12px; bottom: 2px; margin: 0; font-size: 10px; color: var(--muted); }
+
+.wx-panel[data-state="loading"] .wx-chips,
+.wx-panel[data-state="error"] .wx-chips,
+.wx-panel[data-state="error"] .wx-next { display: none; }
+.wx-panel[data-state="error"] .wx-temp { display: none; }
 
 /* ---------- Info cards ---------- */
 .info-section { padding: 48px 0 56px; }
@@ -288,6 +325,10 @@ h1, h2, h3 { font-family: var(--font-head); line-height: 1.25; margin: 0; }
   .main-nav .nav-cta { margin: 8px 0 0; text-align: center; }
 
   .channel-bar { padding: 10px 16px; }
+
+  .wx-panel { flex-direction: column; align-items: stretch; padding: 12px 16px 18px; gap: 12px; }
+  .wx-next { width: 100%; }
+  .wx-hour { flex: 1; width: auto; min-width: 0; }
 }
 
 /* Ponsel/tablet posisi tegak: layar 100vh terlalu tinggi untuk video 16:9,
@@ -314,8 +355,17 @@ h1, h2, h3 { font-family: var(--font-head); line-height: 1.25; margin: 0; }
     font-size: 0; gap: 0; margin: 0;
   }
   .icon-btn { width: 40px; height: 40px; }
-  .ticker-label { padding: 0 10px; font-size: 11px; }
-  .ticker-text { font-size: 14px; }
+  .wx-panel { padding: 10px 12px 16px; gap: 10px; }
+  .wx-current { gap: 12px; }
+  .wx-current-icon { width: 56px; height: 56px; }
+  .wx-headline { gap: 0 10px; margin-bottom: 6px; }
+  .wx-loc { flex-basis: 100%; }
+  .wx-loc::before { display: none; }
+  .wx-chip { font-size: 12px; padding: 4px 8px; }
+  .wx-chip-label { display: none; }
+  .wx-hour { padding: 8px 4px; }
+  .wx-hour-icon { width: 32px; height: 32px; }
+  .wx-hour-temp { font-size: 16px; }
 
 }
 
@@ -336,11 +386,14 @@ h1, h2, h3 { font-family: var(--font-head); line-height: 1.25; margin: 0; }
   .channel-bar { padding: 16px 40px; }
   .clock-date { font-size: 15px; }
   .channel-now { font-size: 16px; }
-  .ticker-text { font-size: 18px; }
-  .channel-ticker { min-height: 52px; }
+  .wx-panel { padding: 18px 40px 22px; }
+  .wx-current-icon { width: 104px; height: 104px; }
+  .wx-chip { font-size: 15px; }
+  .wx-hour { width: 132px; }
+  .wx-hour-icon { width: 52px; height: 52px; }
+  .wx-hour-temp { font-size: 23px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
-  .ticker-text { padding-left: 16px; white-space: normal; }
 }
