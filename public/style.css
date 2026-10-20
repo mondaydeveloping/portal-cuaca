@@ -1,0 +1,346 @@
+/* =========================================================
+   Landing Page Cuaca — kanal video fullscreen, gaya institusi
+   (navy, putih, aksen kuning/merah)
+   ========================================================= */
+
+:root {
+  --navy-900: #061a3d;
+  --navy-800: #0b2f6b;
+  --navy-700: #12408f;
+  --blue-500: #1e6fd9;
+  --blue-50:  #eaf2fd;
+
+  --yellow:   #f5b400;
+  --yellow-50:#fff6d6;
+  --red:      #d32f2f;
+  --red-50:   #fdecec;
+  --green:    #2ecc71;
+
+  --bg:       #f3f5f9;
+  --surface:  #ffffff;
+  --border:   #dfe4ec;
+  --text:     #1d2939;
+  --muted:    #5b6779;
+
+  --radius:   12px;
+  --shadow:   0 4px 18px rgba(11, 47, 107, .08);
+  --shadow-lg:0 10px 30px rgba(11, 47, 107, .14);
+
+  --header-h: 72px;
+
+  --font-head: 'Montserrat', system-ui, sans-serif;
+  --font-body: 'Roboto', system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+body.no-scroll { overflow: hidden; }
+
+img, svg, iframe { display: block; max-width: 100%; }
+a { color: var(--blue-500); }
+h1, h2, h3 { font-family: var(--font-head); line-height: 1.25; margin: 0; }
+[hidden] { display: none !important; }
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.skip-link {
+  position: absolute; left: 16px; top: -48px;
+  background: var(--yellow); color: var(--navy-900);
+  padding: 8px 14px; border-radius: 6px; font-weight: 700; z-index: 2000;
+}
+.skip-link:focus { top: 8px; }
+
+:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+
+/* ---------- Header ---------- */
+.site-header {
+  background: var(--navy-800);
+  color: #fff;
+  position: sticky; top: 0; z-index: 50;
+  box-shadow: 0 2px 10px rgba(0,0,0,.18);
+}
+.header-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  height: var(--header-h); gap: 16px;
+}
+.brand { display: flex; align-items: center; gap: 12px; color: #fff; text-decoration: none; }
+.brand-logo { width: 44px; height: 44px; flex-shrink: 0; }
+.brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+.brand-text strong { font-family: var(--font-head); font-size: 18px; font-weight: 800; letter-spacing: .3px; }
+.brand-text small { font-size: 11px; color: #b9c8e6; letter-spacing: .4px; }
+
+.main-nav ul { display: flex; align-items: center; gap: 4px; list-style: none; margin: 0; padding: 0; }
+.main-nav a {
+  display: block; padding: 10px 14px; border-radius: 8px;
+  color: #e4ecfa; text-decoration: none; font-weight: 500; font-size: 15px;
+  transition: background .2s, color .2s;
+}
+.main-nav a:hover { background: rgba(255,255,255,.1); color: #fff; }
+.main-nav a[aria-current="page"] { color: #fff; box-shadow: inset 0 -3px 0 var(--yellow); border-radius: 8px 8px 0 0; }
+.main-nav .nav-cta { background: var(--yellow); color: var(--navy-900); font-weight: 700; margin-left: 8px; }
+.main-nav .nav-cta:hover { background: #ffc61a; color: var(--navy-900); }
+
+.nav-toggle {
+  display: none; width: 44px; height: 44px; padding: 10px;
+  background: transparent; border: 1px solid rgba(255,255,255,.3); border-radius: 8px;
+  cursor: pointer; flex-direction: column; justify-content: space-between;
+}
+.nav-toggle span { display: block; height: 2px; background: #fff; border-radius: 2px; transition: transform .25s, opacity .25s; }
+.nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(10px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-10px) rotate(-45deg); }
+
+/* =========================================================
+   KANAL VIDEO FULLSCREEN
+   Mengisi seluruh layar di bawah header; dalam mode layar penuh
+   (.is-fullscreen) mengisi 100% viewport.
+   ========================================================= */
+.channel {
+  position: relative;
+  display: flex; flex-direction: column;
+  height: calc(100vh - var(--header-h));
+  height: calc(100svh - var(--header-h));
+  min-height: 420px;
+  background: #000;
+  color: #fff;
+}
+.channel.is-fullscreen {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  width: 100%;
+}
+.channel.is-pseudo-fullscreen {      /* fallback bila Fullscreen API tidak tersedia (mis. iPhone) */
+  position: fixed; inset: 0; z-index: 1000;
+}
+
+/* --- Bar atas --- */
+.channel-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 12px 24px;
+  background: linear-gradient(90deg, var(--navy-900) 0%, var(--navy-800) 100%);
+  border-bottom: 3px solid var(--yellow);
+  flex-shrink: 0;
+}
+.channel-heading { min-width: 0; }
+.channel-eyebrow {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--yellow);
+}
+.live-dot {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--red);
+  box-shadow: 0 0 0 0 rgba(211, 47, 47, .7);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  70%  { box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
+}
+.channel h1 { font-size: clamp(18px, 2.2vw, 26px); font-weight: 800; letter-spacing: -.2px; margin-top: 2px; }
+.channel-now {
+  margin: 2px 0 0; font-size: 14px; color: #c9d6ee;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.channel-side { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
+
+/* --- Jam resmi --- */
+.clock { text-align: right; line-height: 1.1; }
+.clock-time {
+  font-family: var(--font-head); font-weight: 800;
+  font-size: clamp(24px, 3.4vw, 44px);
+  font-variant-numeric: tabular-nums; letter-spacing: 1px;
+  white-space: nowrap;
+}
+.clock-zone { font-size: .42em; color: var(--yellow); margin-left: 8px; font-weight: 700; letter-spacing: .5px; }
+.clock-date { display: block; margin-top: 4px; font-size: 13px; color: #c9d6ee; }
+.clock-status {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 4px;
+  font-size: 11px; color: #9fb3d9;
+}
+.clock-status::before {
+  content: ''; width: 8px; height: 8px; border-radius: 50%; background: #8a94a6; flex-shrink: 0;
+}
+.clock-status[data-state="ok"]::before       { background: var(--green); }
+.clock-status[data-state="stale"]::before    { background: var(--yellow); }
+.clock-status[data-state="fallback"]::before { background: var(--red); }
+
+/* --- Tombol ikon --- */
+.icon-btn {
+  width: 44px; height: 44px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 8px; border: 1px solid rgba(255,255,255,.25);
+  background: rgba(255,255,255,.06); color: #fff; cursor: pointer;
+  transition: background .2s;
+}
+.icon-btn:hover { background: rgba(255,255,255,.16); }
+.icon-btn svg { width: 22px; height: 22px; fill: currentColor; }
+.icon-btn .icon-exit { display: none; }
+.icon-btn.is-active .icon-enter { display: none; }
+.icon-btn.is-active .icon-exit { display: block; }
+
+/* --- Layar video --- */
+.channel-screen { position: relative; flex: 1; min-height: 0; background: #000; }
+.channel-screen iframe,
+.channel-screen .player-mount { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+.video-state {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+  color: #c9d6ee; text-align: center; padding: 24px;
+}
+.video-state p { margin: 0; max-width: 460px; }
+.video-state.is-error { color: #fff; }
+.video-state.is-error strong { color: var(--yellow); font-family: var(--font-head); font-size: 18px; }
+.video-state a { color: var(--yellow); }
+
+.spinner {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 4px solid rgba(255,255,255,.2); border-top-color: var(--yellow);
+  animation: spin .9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- Running text --- */
+.channel-ticker {
+  display: flex; align-items: stretch; flex-shrink: 0;
+  min-height: 44px; overflow: hidden;
+  background: var(--yellow-50); color: #3d2e00;
+}
+.ticker-label {
+  flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 0 16px;
+  background: var(--red); color: #fff;
+  font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .4px;
+}
+.ticker-label svg { width: 16px; height: 16px; fill: currentColor; }
+.ticker-track { flex: 1; display: flex; align-items: center; overflow: hidden; }
+.ticker-text {
+  display: inline-block; margin: 0; padding-left: 100%;
+  white-space: nowrap; font-weight: 500; font-size: 15px;
+  animation: ticker 32s linear infinite;
+}
+.ticker-track:hover .ticker-text { animation-play-state: paused; }
+@keyframes ticker { to { transform: translateX(-100%); } }
+
+/* ---------- Info cards ---------- */
+.info-section { padding: 48px 0 56px; }
+.section-title {
+  font-size: clamp(20px, 3vw, 26px); color: var(--navy-800); margin-bottom: 20px;
+  padding-left: 14px; border-left: 5px solid var(--yellow);
+}
+.info-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.info-card {
+  display: block; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 22px; text-decoration: none; color: var(--text);
+  transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+.info-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: transparent; }
+.info-card h3 { font-size: 17px; color: var(--navy-800); margin: 14px 0 6px; }
+.info-card p { margin: 0; color: var(--muted); font-size: 14px; }
+.info-icon { display: inline-flex; width: 48px; height: 48px; border-radius: 12px; align-items: center; justify-content: center; }
+.info-icon svg { width: 26px; height: 26px; fill: currentColor; }
+.icon-red    { background: var(--red-50);    color: var(--red); }
+.icon-blue   { background: var(--blue-50);   color: var(--blue-500); }
+.icon-yellow { background: var(--yellow-50); color: #b98600; }
+
+/* ---------- Footer ---------- */
+.site-footer { background: var(--navy-900); color: #b9c8e6; font-size: 14px; }
+.footer-grid { display: grid; grid-template-columns: 1fr; gap: 28px; padding-top: 40px; padding-bottom: 32px; }
+.footer-title { font-size: 15px; color: #fff; margin-bottom: 12px; }
+.site-footer p { margin: 0; }
+.site-footer .footer-note { margin-top: 12px; font-size: 13px; }
+.site-footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.site-footer a { color: #b9c8e6; text-decoration: none; }
+.site-footer a:hover { color: var(--yellow); }
+.footer-bottom { border-top: 1px solid rgba(255,255,255,.1); padding: 16px 0; font-size: 13px; text-align: center; }
+
+/* =========================================================
+   RESPONSIF
+   ========================================================= */
+
+/* Mobile & tablet kecil: menu collapse */
+@media (max-width: 959px) {
+  .nav-toggle { display: flex; }
+  .main-nav {
+    position: absolute; left: 0; right: 0; top: 100%;
+    background: var(--navy-800); border-top: 1px solid rgba(255,255,255,.1);
+    max-height: 0; overflow: hidden; transition: max-height .3s ease;
+  }
+  .main-nav.is-open { max-height: 480px; box-shadow: 0 10px 20px rgba(0,0,0,.2); }
+  .main-nav ul { flex-direction: column; align-items: stretch; padding: 8px 16px 16px; gap: 2px; }
+  .main-nav a[aria-current="page"] { box-shadow: inset 3px 0 0 var(--yellow); border-radius: 8px; }
+  .main-nav .nav-cta { margin: 8px 0 0; text-align: center; }
+
+  .channel-bar { padding: 10px 16px; }
+}
+
+/* Ponsel/tablet posisi tegak: layar 100vh terlalu tinggi untuk video 16:9,
+   jadi tinggi kanal mengikuti video. Mode layar penuh tetap memenuhi layar. */
+@media (max-width: 959px) and (orientation: portrait) {
+  .channel:not(.is-fullscreen) { height: auto; min-height: 0; }
+  .channel:not(.is-fullscreen) .channel-screen { flex: none; aspect-ratio: 16 / 9; }
+}
+
+@media (max-width: 599px) {
+  :root { --header-h: 64px; }
+  .brand-logo { width: 38px; height: 38px; }
+  .brand-text small { display: none; }
+
+  .channel-bar { gap: 10px; padding: 10px 12px; }
+  .channel-eyebrow, .channel-now, .clock-date { display: none; }
+  .channel h1 { font-size: 16px; margin: 0; }
+  .channel-side { gap: 10px; }
+  .clock-time { font-size: 22px; }
+  /* Di ponsel, status jam cukup berupa titik warna (teks lengkap ada di atribut title) */
+  .clock { position: relative; }
+  .clock-status {
+    position: absolute; left: -14px; top: 50%; transform: translateY(-50%);
+    font-size: 0; gap: 0; margin: 0;
+  }
+  .icon-btn { width: 40px; height: 40px; }
+  .ticker-label { padding: 0 10px; font-size: 11px; }
+  .ticker-text { font-size: 14px; }
+
+}
+
+/* Tablet */
+@media (min-width: 600px) {
+  .info-grid { grid-template-columns: repeat(2, 1fr); }
+  .footer-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Desktop */
+@media (min-width: 960px) {
+  .info-grid { grid-template-columns: repeat(3, 1fr); }
+  .footer-grid { grid-template-columns: 2fr 1fr 1fr; }
+}
+
+/* Layar sangat lebar (TV/videotron) */
+@media (min-width: 1600px) {
+  .channel-bar { padding: 16px 40px; }
+  .clock-date { font-size: 15px; }
+  .channel-now { font-size: 16px; }
+  .ticker-text { font-size: 18px; }
+  .channel-ticker { min-height: 52px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .ticker-text { padding-left: 16px; white-space: normal; }
+}

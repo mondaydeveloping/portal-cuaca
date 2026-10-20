@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prakiraan Cuaca Terkini</title>
+  <meta name="description" content="Kanal video prakiraan cuaca terbaru dengan waktu resmi BMKG.">
+  <meta name="theme-color" content="#0b2f6b">
+
+  <!-- Font: Montserrat (judul) + Roboto (teks) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#konten">Lewati ke konten utama</a>
+
+  <!-- ===== HEADER / NAVIGASI ===== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#" aria-label="Beranda Portal Cuaca">
+        <!-- Ganti SVG ini dengan logo resmi instansi Anda (mis. <img src="logo.png" alt="...">) -->
+        <svg class="brand-logo" viewBox="0 0 48 48" aria-hidden="true">
+          <circle cx="24" cy="24" r="23" fill="#ffffff"/>
+          <circle cx="24" cy="24" r="19" fill="#0b2f6b"/>
+          <circle cx="19" cy="20" r="6" fill="#f5b400"/>
+          <path d="M14 31c0-3.3 2.7-6 6-6 .9-3 3.7-5 6.9-5 4 0 7.1 3.2 7.1 7.1v.1c1.7.5 3 2.1 3 3.9 0 2.2-1.8 3.9-4 3.9H17.9C15.7 35 14 33.2 14 31z" fill="#ffffff"/>
+        </svg>
+        <span class="brand-text">
+          <strong>Portal Cuaca</strong>
+          <small>Meteorologi · Klimatologi · Geofisika</small>
+        </span>
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-utama" aria-label="Buka menu">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="main-nav" id="nav-utama" aria-label="Navigasi utama">
+        <ul>
+          <li><a href="#" aria-current="page">Beranda</a></li>
+          <li><a href="#">Cuaca</a></li>
+          <li><a href="#">Iklim</a></li>
+          <li><a href="#">Gempabumi</a></li>
+          <li><a href="#">Kualitas Udara</a></li>
+          <li><a href="#" class="nav-cta">Peringatan Dini</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="konten">
+    <!-- ===== KANAL VIDEO (FULLSCREEN) ===== -->
+    <section class="channel" id="channel" aria-labelledby="judul-halaman">
+      <!-- Bar atas: judul + jam resmi BMKG + tombol layar penuh -->
+      <div class="channel-bar">
+        <div class="channel-heading">
+          <div class="channel-eyebrow">
+            <span class="live-dot" aria-hidden="true"></span>
+            <span>Kanal Video Cuaca</span>
+          </div>
+          <h1 id="judul-halaman">Prakiraan Cuaca Terkini</h1>
+          <p class="channel-now" id="channel-now">Memuat video…</p>
+        </div>
+
+        <div class="channel-side">
+          <div class="clock" role="timer" aria-label="Waktu resmi BMKG">
+            <div class="clock-time">
+              <time id="clock-time">--:--:--</time><span class="clock-zone" id="clock-zone">WIB</span>
+            </div>
+            <span class="clock-date" id="clock-date"></span>
+            <span class="clock-status" id="clock-status" data-state="pending">Menyinkronkan waktu…</span>
+          </div>
+
+          <button class="icon-btn" id="fs-toggle" type="button" aria-pressed="false" aria-label="Layar penuh" title="Layar penuh">
+            <svg class="icon-enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v2H5v5H3V3zm11 0h7v7h-2V5h-5V3zM3 14h2v5h5v2H3v-7zm16 0h2v7h-7v-2h5v-5z"/></svg>
+            <svg class="icon-exit" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h2v7H3V8h5V3zm6 0h2v5h5v2h-7V3zM3 14h7v7H8v-5H3v-2zm11 0h7v2h-5v5h-2v-7z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Layar video: pemutar YouTube dibuat oleh script.js -->
+      <div class="channel-screen" id="channel-screen">
+        <div class="video-state" id="video-state" role="status">
+          <span class="spinner" aria-hidden="true"></span>
+          <p>Memuat video terbaru…</p>
+        </div>
+      </div>
+
+      <!-- Running text peringatan -->
+      <div class="channel-ticker" role="region" aria-label="Peringatan dini cuaca">
+        <span class="ticker-label">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 1 21h22L12 2zm1 15h-2v-2h2v2zm0-4h-2V9h2v4z"/></svg>
+          Peringatan Dini
+        </span>
+        <div class="ticker-track">
+          <p class="ticker-text">
+            Waspada potensi hujan lebat disertai kilat dan angin kencang di sebagian wilayah. Ikuti informasi resmi terbaru.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== KARTU INFORMASI ===== -->
+    <section class="info-section" aria-labelledby="judul-info">
+      <div class="container">
+        <h2 class="section-title" id="judul-info">Layanan Informasi</h2>
+        <div class="info-grid">
+          <a class="info-card" href="#">
+            <span class="info-icon icon-red" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 2 1 21h22L12 2zm1 15h-2v-2h2v2zm0-4h-2V9h2v4z"/></svg>
+            </span>
+            <h3>Peringatan Dini Cuaca</h3>
+            <p>Informasi potensi cuaca ekstrem untuk tiap provinsi.</p>
+          </a>
+          <a class="info-card" href="#">
+            <span class="info-icon icon-blue" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M19.4 10A7 7 0 0 0 6.1 8.1 5.5 5.5 0 0 0 6.5 19h12.5a4.5 4.5 0 0 0 .4-9z"/></svg>
+            </span>
+            <h3>Prakiraan Cuaca</h3>
+            <p>Prakiraan cuaca hingga tingkat kecamatan.</p>
+          </a>
+          <a class="info-card" href="#">
+            <span class="info-icon icon-yellow" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM11 1h2v3h-2zm0 19h2v3h-2zM1 11h3v2H1zm19 0h3v2h-3zM4.2 5.6l1.4-1.4 2.1 2.1-1.4 1.4zm12.1 12.1 1.4-1.4 2.1 2.1-1.4 1.4zM4.2 18.4l2.1-2.1 1.4 1.4-2.1 2.1zM16.3 6.3l2.1-2.1 1.4 1.4-2.1 2.1z"/></svg>
+            </span>
+            <h3>Citra Satelit</h3>
+            <p>Pantauan awan dan sistem cuaca terkini.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <h2 class="footer-title">Portal Cuaca</h2>
+        <p>Jl. Contoh Alamat No. 1, Jakarta<br>Telp. (021) 000-0000</p>
+        <p class="footer-note">
+          Waktu resmi bersumber dari <a href="https://jam.bmkg.go.id/Jam.BMKG" target="_blank" rel="noopener">jam.bmkg.go.id</a>.
+          Video dari playlist <a href="https://www.youtube.com/playlist?list=PL-k2VTQGAjdeCDZ-T9e6YJfdaRt28E-ym" target="_blank" rel="noopener">Prakiraan Cuaca Indonesia</a> — kanal YouTube Info BMKG.
+        </p>
+      </div>
+      <div>
+        <h2 class="footer-title">Tautan</h2>
+        <ul>
+          <li><a href="#">Prakiraan Cuaca</a></li>
+          <li><a href="#">Peringatan Dini</a></li>
+          <li><a href="#">Gempabumi</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="footer-title">Ikuti Kami</h2>
+        <ul>
+          <li><a href="https://www.youtube.com/@InfoBMKGIndonesia" target="_blank" rel="noopener">YouTube Info BMKG</a></li>
+          <li><a href="#">Instagram</a></li>
+          <li><a href="#">X / Twitter</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        &copy; <span id="year"></span> Portal Cuaca. Hak cipta dilindungi.
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
