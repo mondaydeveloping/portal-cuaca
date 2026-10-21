@@ -277,7 +277,14 @@ function readPlaylistIds(listId, timeoutMs = 15000) {
       host: 'https://www.youtube-nocookie.com',
       width: 1,
       height: 1,
-      playerVars: { listType: 'playlist', list: listId, autoplay: 0, mute: 1, origin: window.location.origin },
+      playerVars: {
+        listType: 'playlist',
+        list: listId,
+        autoplay: 0,
+        mute: 1,
+        origin: window.location.origin,
+        cb: Date.now(),   // alamat unik setiap cek -> browser tidak memakai daftar lama dari cache
+      },
       events: {
         onReady: () => { tryRead(); poll = setInterval(tryRead, 250); },
         onError: tryRead,   // daftar ID tetap bisa terbaca walau video pertama bermasalah

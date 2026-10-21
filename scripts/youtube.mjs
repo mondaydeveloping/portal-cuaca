@@ -53,6 +53,11 @@ export function parseFeed(xml) {
     .filter(v => VIDEO_ID_PATTERN.test(v.id) && v.title);
 }
 
+const toIso = value => {
+  const time = Date.parse(value);
+  return Number.isNaN(time) ? String(value || '') : new Date(time).toISOString();
+};
+
 const normalize = text => String(text).normalize('NFKC').replace(/\s+/g, ' ').trim().toLowerCase();
 
 /** Judul diawali prefix (tidak peka huruf besar/kecil & spasi berlebih). */
@@ -104,7 +109,7 @@ export function selectLatest(entries, { prefix = '', max = 3, includeShorts = fa
     .map(v => ({
       id: v.id,
       title: v.title,
-      publishedAt: v.publishedAt,
+      publishedAt: toIso(v.publishedAt),   // format seragam (API "…Z" vs RSS "…+00:00")
       // Label tanggal prakiraan hanya untuk video prakiraan harian
       forecastDate: forecastPrefix && matchesPrefix(v.title, forecastPrefix)
         ? parseForecastDate(v.title, v.publishedAt)

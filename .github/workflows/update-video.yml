@@ -34,8 +34,12 @@ jobs:
         with:
           node-version: 20
 
-      - name: Ambil video terbaru dari RSS YouTube
+      - name: Ambil video terbaru dari YouTube
         id: feed
+        env:
+          # Opsional: Settings > Secrets and variables > Actions > New repository secret.
+          # Bila kosong, otomatis memakai RSS.
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
         run: node scripts/update-video.mjs
 
       - name: Commit video.json
