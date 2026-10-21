@@ -2,15 +2,17 @@
 
 /* =========================================================
    KONFIGURASI
-   Tidak butuh API key. Daftar video terbaru disiapkan otomatis oleh
-   GitHub Actions (scripts/update-video.mjs) ke file video.json, lalu
-   diputar dengan YouTube IFrame Player API.
+   Tidak butuh API key. Video terbaru kanal diambil dari video.json (GitHub Actions)
+   atau langsung dari playlist upload otomatis kanal, lalu diputar dengan
+   YouTube IFrame Player API.
    ========================================================= */
 
 const VIDEO = {
-  SOURCE:       'video.json',   // diperbarui otomatis oleh GitHub Actions
-  POLL_MINUTES: 2,              // seberapa sering halaman mengecek video baru
-  CHANNEL_URL:  'https://www.youtube.com/@InfoBMKGIndonesia',
+  CHANNEL_ID:      'UC8Do0tOnpnz1ydOZV0XKS3g',                   // @InfoBMKGIndonesia
+  CHANNEL_URL:     'https://www.youtube.com/@InfoBMKGIndonesia',
+  SOURCE:          'video.json',  // opsional, diisi GitHub Actions; bila kosong -> playlist upload kanal
+  POLL_MINUTES:    3,             // seberapa sering halaman mengecek video baru
+  FORECAST_PREFIX: 'Prakiraan Cuaca Esok Hari',  // judul yang diberi label "Prakiraan untuk …"
 };
 
 const PLAYER = {
@@ -157,23 +159,54 @@ function startClock() {
 
 /* =========================================================
    PEMUTAR VIDEO (YouTube IFrame Player API — tanpa API key)
-   - Memutar video terbaru kanal Info BMKG (dari video.json) berulang-ulang (loop).
-   - Mengecek video.json berkala; bila ada video lebih baru, langsung pindah.
-   - Bila video tidak bisa di-embed, mencoba video cadangan berikutnya.
+   Sumber video terbaru, dicoba berurutan:
+   1. video.json  — disiapkan GitHub Actions dari RSS kanal (bila workflow aktif)
+   2. Playlist upload otomatis kanal (UULF… = video biasa tanpa Shorts/live,
+      lalu UU… = semua upload). Diperbarui YouTube sendiri, terbaru di urutan pertama.
+   Video terbaru diputar berulang; bila ada yang lebih baru, langsung pindah.
    ========================================================= */
 
 const VIDEO_ID_PATTERN = /^[\w-]{11}$/;
+const CHANNEL_SUFFIX   = VIDEO.CHANNEL_ID.slice(2);   // "UCxxxx" -> "xxxx"
+const UPLOAD_LISTS     = [`UULF${CHANNEL_SUFFIX}`, `UU${CHANNEL_SUFFIX}`];
 
 const tv = {
   YT: null,
   player: null,
-  videos: [],   // dari video.json, terbaru lebih dulu
+  videos: [],   // terbaru lebih dulu: [{ id, title, forecastDate }]
   pos: 0,       // indeks video yang sedang diputar
+  source: '',   // 'video.json' | 'uploads'
 };
 
 const forecastDateFmt = new Intl.DateTimeFormat('id-ID', {
   weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
 });
+
+const MONTHS = {
+  januari: 1, februari: 2, maret: 3, april: 4, mei: 5, juni: 6,
+  juli: 7, agustus: 8, september: 9, oktober: 10, november: 11, desember: 12,
+};
+
+/**
+ * Tanggal prakiraan dari judul "Prakiraan Cuaca Esok Hari, …, 21 Oktober [2026]".
+ * (Versi browser dari parseForecastDate di scripts/youtube.mjs; tahun kosong = tahun berjalan.)
+ */
+function forecastDateFromTitle(title) {
+  const normalized = String(title).replace(/\s+/g, ' ').trim().toLowerCase();
+  if (!normalized.startsWith(VIDEO.FORECAST_PREFIX.toLowerCase())) return null;
+
+  const m = normalized.match(/(\d{1,2}) (januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember)(?: (\d{4}))?/);
+  if (!m) return null;
+
+  const now   = new Date(currentTimeMs());
+  const day   = Number(m[1]);
+  const month = MONTHS[m[2]];
+  let year    = m[3] ? Number(m[3]) : now.getFullYear();
+  if (!m[3] && now.getMonth() === 11 && month === 1) year += 1;
+
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCDate() === day ? date.toISOString().slice(0, 10) : null;
+}
 
 function loadYouTubeApi() {
   if (window.YT?.Player) return Promise.resolve(window.YT);
@@ -192,10 +225,11 @@ function loadYouTubeApi() {
   });
 }
 
-/** Baca video.json (tanpa cache) dan validasi isinya. */
-async function fetchVideoList() {
+/* ---------- Sumber 1: video.json ---------- */
+
+async function fetchVideoJson() {
   const res = await fetch(`${VIDEO.SOURCE}?t=${Date.now()}`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`Daftar video tidak dapat dibaca (HTTP ${res.status}).`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   return (Array.isArray(data?.videos) ? data.videos : [])
     .filter(v => VIDEO_ID_PATTERN.test(v?.id))
@@ -205,6 +239,81 @@ async function fetchVideoList() {
       forecastDate: /^\d{4}-\d{2}-\d{2}$/.test(v.forecastDate) ? v.forecastDate : null,
     }));
 }
+
+/* ---------- Sumber 2: playlist upload otomatis kanal ---------- */
+
+/** Baca daftar ID video sebuah playlist memakai pemutar tersembunyi (tidak diputar). */
+function readPlaylistIds(listId, timeoutMs = 15000) {
+  return new Promise((resolve, reject) => {
+    const host  = document.createElement('div');
+    const mount = document.createElement('div');
+    host.className = 'yt-probe';
+    host.setAttribute('aria-hidden', 'true');
+    host.appendChild(mount);
+    document.body.appendChild(host);
+
+    let probe;
+    let poll;
+    let settled = false;
+
+    const finish = (error, ids) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      clearInterval(poll);
+      try { probe?.destroy(); } catch { /* abaikan */ }
+      host.remove();
+      if (error) reject(error); else resolve(ids);
+    };
+
+    const tryRead = () => {
+      const ids = probe?.getPlaylist?.();
+      if (Array.isArray(ids) && ids.length) finish(null, ids);
+    };
+
+    const timer = setTimeout(() => finish(new Error(`playlist ${listId} tidak terbaca`)), timeoutMs);
+
+    probe = new tv.YT.Player(mount, {
+      host: 'https://www.youtube-nocookie.com',
+      width: 1,
+      height: 1,
+      playerVars: { listType: 'playlist', list: listId, autoplay: 0, mute: 1, origin: window.location.origin },
+      events: {
+        onReady: () => { tryRead(); poll = setInterval(tryRead, 250); },
+        onError: tryRead,   // daftar ID tetap bisa terbaca walau video pertama bermasalah
+      },
+    });
+  });
+}
+
+async function fetchFromUploads() {
+  let lastError;
+  for (const listId of UPLOAD_LISTS) {
+    try {
+      const ids = await readPlaylistIds(listId);
+      return ids.filter(id => VIDEO_ID_PATTERN.test(id)).slice(0, 3)
+        .map(id => ({ id, title: '', forecastDate: null }));
+    } catch (err) {
+      console.warn('[Video]', err.message);
+      lastError = err;
+    }
+  }
+  throw lastError || new Error('Playlist upload kanal tidak terbaca.');
+}
+
+/** Ambil daftar video terbaru dari sumber yang tersedia. */
+async function getLatestVideos() {
+  try {
+    const videos = await fetchVideoJson();
+    if (videos.length) return { videos, source: 'video.json' };
+    console.info('[Video] video.json masih kosong — memakai playlist upload kanal.');
+  } catch (err) {
+    console.info('[Video] video.json tidak tersedia —', err.message, '— memakai playlist upload kanal.');
+  }
+  return { videos: await fetchFromUploads(), source: 'uploads' };
+}
+
+/* ---------- Tampilan ---------- */
 
 function showState(title, message, { isError = false, withLink = false } = {}) {
   els.state.hidden = false;
@@ -236,6 +345,8 @@ function renderNowPlaying(video) {
     els.channelFor.hidden = true;
   }
 }
+
+/* ---------- Pemutar ---------- */
 
 function createPlayer(videoId) {
   const mount = document.createElement('div');
@@ -281,8 +392,21 @@ async function playVideo(pos) {
 }
 
 function onPlayerStateChange(e) {
+  const { PlayerState } = tv.YT;
+
+  // Judul belum diketahui (sumber playlist upload): ambil dari pemutar
+  if (e.data === PlayerState.PLAYING) {
+    const video = tv.videos[tv.pos];
+    const title = tv.player.getVideoData?.().title;
+    if (video && !video.title && title) {
+      video.title = title;
+      video.forecastDate = forecastDateFromTitle(title);
+      renderNowPlaying(video);
+    }
+  }
+
   // Loop: video selesai -> putar lagi dari awal
-  if (e.data === tv.YT.PlayerState.ENDED) {
+  if (e.data === PlayerState.ENDED) {
     tv.player.seekTo(0, true);
     tv.player.playVideo();
   }
@@ -292,42 +416,47 @@ function onPlayerError(e) {
   // 100 = video dihapus/privat, 101/150 = pemilik melarang embed
   console.warn('[YouTube Player] kode error', e.data, tv.videos[tv.pos]?.id);
   if (tv.pos + 1 < tv.videos.length) {
-    playVideo(tv.pos + 1);   // coba video cadangan (hari sebelumnya)
+    playVideo(tv.pos + 1);   // coba video sebelumnya
   } else {
     showState('Video belum dapat ditampilkan', 'Video tidak dapat diputar di situs ini.', { isError: true, withLink: true });
     els.channelNow.textContent = 'Video tidak tersedia';
   }
 }
 
-/** Cek video.json; bila video terbaru berubah, langsung pindah. */
+/** Cek sumber; bila video terbaru berubah, langsung pindah. */
 async function checkForNewVideo() {
-  let videos;
+  let result;
   try {
-    videos = await fetchVideoList();
+    result = await getLatestVideos();
   } catch (err) {
     console.warn('[Video] gagal mengecek video baru:', err.message);
+    if (!tv.videos.length) {
+      showState('Video belum dapat ditampilkan', 'Daftar video kanal tidak dapat dibaca. Halaman akan mencoba lagi otomatis.', { isError: true, withLink: true });
+    }
     return;
   }
-  if (!videos.length) return;
+  if (!result.videos.length) return;
 
-  const isNew = videos[0].id !== tv.videos[0]?.id;
-  tv.videos = videos;
+  const isNew = result.videos[0].id !== tv.videos[0]?.id;
+  if (isNew) console.info(`[Video] video terbaru (${result.source}):`, result.videos[0].id);
+
+  // Pertahankan judul yang sudah diketahui untuk video yang sama
+  const known = new Map(tv.videos.map(v => [v.id, v]));
+  tv.videos = result.videos.map(v => (!v.title && known.get(v.id)?.title ? known.get(v.id) : v));
+  tv.source = result.source;
+
   if (isNew) await playVideo(0);
 }
 
 async function initVideo() {
   try {
     tv.YT = await loadYouTubeApi();
-    await checkForNewVideo();
-    if (!tv.videos.length) {
-      showState('Menunggu video terbaru',
-        'Daftar video belum tersedia. Halaman akan mengecek ulang secara otomatis.');
-    }
   } catch (err) {
-    console.error('[Video]', err);
     showState('Video belum dapat ditampilkan', err.message, { isError: true, withLink: true });
     els.channelNow.textContent = 'Video tidak tersedia';
+    return;
   }
+  await checkForNewVideo();
   setInterval(checkForNewVideo, VIDEO.POLL_MINUTES * 60 * 1000);
 }
 
