@@ -1,0 +1,71 @@
+# Cek video terbaru di channel YouTube Info BMKG setiap 5 menit,
+# lalu deploy situs ke GitHub Pages bila ada video baru (atau bila ada push ke main).
+#
+# Syarat: Settings > Pages > Build and deployment > Source = "GitHub Actions".
+
+name: Update video & deploy
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'     # interval minimum GitHub; jadwal bisa molor beberapa menit
+  push:
+    branches: [main]
+  workflow_dispatch:          # tombol "Run workflow" untuk menjalankan manual
+
+permissions:
+  contents: write             # commit video.json
+  pages: write                # deploy GitHub Pages
+  id-token: write
+
+concurrency:
+  group: update-video
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      deploy: ${{ steps.feed.outputs.changed == 'true' || github.event_name != 'schedule' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Ambil video terbaru dari RSS YouTube
+        id: feed
+        run: node scripts/update-video.mjs
+
+      - name: Commit video.json
+        if: steps.feed.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add video.json
+          git commit -m "Perbarui video prakiraan terbaru"
+          git pull --rebase
+          git push
+
+      - name: Siapkan file situs
+        if: steps.feed.outputs.changed == 'true' || github.event_name != 'schedule'
+        run: |
+          mkdir _site
+          cp index.html style.css script.js video.json _site/
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.feed.outputs.changed == 'true' || github.event_name != 'schedule'
+        with:
+          path: _site
+
+  deploy:
+    needs: update
+    if: needs.update.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

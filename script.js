@@ -2,27 +2,15 @@
 
 /* =========================================================
    KONFIGURASI
-   Tidak butuh API key. Video diputar langsung dari playlist YouTube
-   lewat YouTube IFrame Player API (pemutar resmi, gratis, tanpa key).
+   Tidak butuh API key. Daftar video terbaru disiapkan otomatis oleh
+   GitHub Actions (scripts/update-video.mjs) ke file video.json, lalu
+   diputar dengan YouTube IFrame Player API.
    ========================================================= */
 
 const VIDEO = {
-  // Playlist "Prakiraan Cuaca Indonesia" — Info BMKG
-  // https://www.youtube.com/playlist?list=PL-k2VTQGAjdeCDZ-T9e6YJfdaRt28E-ym
-  PLAYLIST_ID: 'PL-k2VTQGAjdeCDZ-T9e6YJfdaRt28E-ym',
-
-  // Urutan playlist di YouTube:
-  //   'newest-first' = video terbaru ada di PALING ATAS playlist
-  //   'oldest-first' = video terbaru ada di PALING BAWAH playlist
-  PLAYLIST_ORDER: 'newest-first',
-
-  // 'latest'   = putar video terbaru saja, berulang-ulang (loop)
-  // 'playlist' = putar seluruh playlist dari video teratas, lalu ulang dari awal
-  MODE: 'latest',
-
-  // Mode 'latest': setiap kali video selesai, cek apakah ada video baru
-  // di playlist bila sudah lewat sekian menit sejak pengecekan terakhir.
-  REFRESH_MINUTES: 30,
+  SOURCE:       'video.json',   // diperbarui otomatis oleh GitHub Actions
+  POLL_MINUTES: 2,              // seberapa sering halaman mengecek video baru
+  CHANNEL_URL:  'https://www.youtube.com/@InfoBMKGIndonesia',
 };
 
 const PLAYER = {
@@ -31,10 +19,9 @@ const PLAYER = {
 };
 
 const CLOCK = {
-  // Endpoint waktu BMKG (functions/api/time.js). Hanya aktif bila di-hosting di
-  // Cloudflare Pages. Di hosting statis murni (mis. GitHub Pages) jam otomatis
-  // memakai waktu perangkat.
-  ENDPOINT:       '/api/time',
+  // Endpoint waktu BMKG. Kosong = memakai waktu perangkat (GitHub Pages tidak
+  // bisa menjalankan server). Isi '/api/time' bila di-hosting di Cloudflare Pages.
+  ENDPOINT:       '',
   RESYNC_MINUTES: 10,
   TIMEZONE:       'Asia/Jakarta',
   ZONE_LABEL:     'WIB',       // 'WITA' (Asia/Makassar) / 'WIT' (Asia/Jayapura)
@@ -63,6 +50,7 @@ const els = {
   screen:      document.getElementById('channel-screen'),
   state:       document.getElementById('video-state'),
   channelNow:  document.getElementById('channel-now'),
+  channelFor:  document.getElementById('channel-for'),
   fsBtn:       document.getElementById('fs-toggle'),
   clockTime:   document.getElementById('clock-time'),
   clockZone:   document.getElementById('clock-zone'),
@@ -80,8 +68,6 @@ const els = {
   navBtn:      document.getElementById('nav-toggle'),
   nav:         document.getElementById('nav-utama'),
 };
-
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 /* =========================================================
    JAM
@@ -170,17 +156,24 @@ function startClock() {
 }
 
 /* =========================================================
-   PEMUTAR PLAYLIST (YouTube IFrame Player API — tanpa API key)
+   PEMUTAR VIDEO (YouTube IFrame Player API — tanpa API key)
+   - Memutar video terbaru kanal Info BMKG (dari video.json) berulang-ulang (loop).
+   - Mengecek video.json berkala; bila ada video lebih baru, langsung pindah.
+   - Bila video tidak bisa di-embed, mencoba video cadangan berikutnya.
    ========================================================= */
+
+const VIDEO_ID_PATTERN = /^[\w-]{11}$/;
 
 const tv = {
   YT: null,
   player: null,
-  candidates: [],   // ID video, terbaru lebih dulu (mode 'latest')
-  pos: 0,           // indeks kandidat yang sedang diputar
-  targetId: null,
-  loadedAt: 0,      // waktu playlist terakhir dimuat
+  videos: [],   // dari video.json, terbaru lebih dulu
+  pos: 0,       // indeks video yang sedang diputar
 };
+
+const forecastDateFmt = new Intl.DateTimeFormat('id-ID', {
+  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+});
 
 function loadYouTubeApi() {
   if (window.YT?.Player) return Promise.resolve(window.YT);
@@ -199,26 +192,63 @@ function loadYouTubeApi() {
   });
 }
 
-/** Buat pemutar baru (pemutar lama dihapus). Resolve saat pemutar siap. */
-function createPlayer() {
-  tv.player?.destroy();
-  els.screen.querySelectorAll('iframe, .player-mount').forEach(el => el.remove());
+/** Baca video.json (tanpa cache) dan validasi isinya. */
+async function fetchVideoList() {
+  const res = await fetch(`${VIDEO.SOURCE}?t=${Date.now()}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Daftar video tidak dapat dibaca (HTTP ${res.status}).`);
+  const data = await res.json();
+  return (Array.isArray(data?.videos) ? data.videos : [])
+    .filter(v => VIDEO_ID_PATTERN.test(v?.id))
+    .map(v => ({
+      id: v.id,
+      title: String(v.title || ''),
+      forecastDate: /^\d{4}-\d{2}-\d{2}$/.test(v.forecastDate) ? v.forecastDate : null,
+    }));
+}
 
+function showState(title, message, { isError = false, withLink = false } = {}) {
+  els.state.hidden = false;
+  els.state.classList.toggle('is-error', isError);
+  els.state.replaceChildren();
+
+  const strong = document.createElement('strong');
+  strong.textContent = title;
+  const p = document.createElement('p');
+  p.textContent = message;
+  els.state.append(strong, p);
+
+  if (withLink) {
+    const a = document.createElement('a');
+    a.href = VIDEO.CHANNEL_URL;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.textContent = 'Buka kanal YouTube Info BMKG';
+    els.state.appendChild(a);
+  }
+}
+
+function renderNowPlaying(video) {
+  els.channelNow.textContent = video.title || 'Video terbaru Info BMKG';
+  if (video.forecastDate) {
+    els.channelFor.textContent = `Prakiraan untuk ${forecastDateFmt.format(new Date(`${video.forecastDate}T00:00:00Z`))}`;
+    els.channelFor.hidden = false;
+  } else {
+    els.channelFor.hidden = true;
+  }
+}
+
+function createPlayer(videoId) {
   const mount = document.createElement('div');
   mount.className = 'player-mount';
   els.screen.appendChild(mount);
 
-  const isPlaylistMode = VIDEO.MODE === 'playlist';
-
   return new Promise(resolve => {
     const player = new tv.YT.Player(mount, {
       host: 'https://www.youtube-nocookie.com',
+      videoId,
       playerVars: {
-        listType: 'playlist',
-        list: VIDEO.PLAYLIST_ID,
-        autoplay: isPlaylistMode && PLAYER.AUTOPLAY_MUTED ? 1 : 0,
+        autoplay: PLAYER.AUTOPLAY_MUTED ? 1 : 0,
         mute: PLAYER.AUTOPLAY_MUTED ? 1 : 0,
-        loop: isPlaylistMode ? 1 : 0,
         rel: 0,
         playsinline: 1,
         fs: PLAYER.NATIVE_FULLSCREEN ? 1 : 0,
@@ -234,115 +264,71 @@ function createPlayer() {
         onError: onPlayerError,
       },
     });
-    tv.player = player;
   });
 }
 
-/** Tunggu sampai daftar ID video playlist tersedia di pemutar. */
-async function waitForPlaylist(timeoutMs = 15000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    const ids = tv.player?.getPlaylist?.();
-    if (Array.isArray(ids) && ids.length) return ids;
-    await sleep(250);
+async function playVideo(pos) {
+  const video = tv.videos[pos];
+  if (!video) return;
+  tv.pos = pos;
+  renderNowPlaying(video);
+
+  if (tv.player) {
+    tv.player.loadVideoById(video.id);
+  } else {
+    tv.player = await createPlayer(video.id);
   }
-  throw new Error('Playlist tidak dapat dimuat. Pastikan playlist bersifat publik.');
-}
-
-/** Mode 'latest': muat playlist, tentukan video terbaru, lalu putar. */
-async function loadLatest() {
-  await createPlayer();
-  const ids = await waitForPlaylist();
-
-  tv.candidates = VIDEO.PLAYLIST_ORDER === 'oldest-first' ? [...ids].reverse() : [...ids];
-  tv.loadedAt   = Date.now();
-  playCandidate(0);
-}
-
-function playCandidate(pos) {
-  tv.pos      = pos;
-  tv.targetId = tv.candidates[pos];
-  tv.player.loadVideoById(tv.targetId);
-}
-
-function updateNowPlaying() {
-  const title = tv.player?.getVideoData?.().title;
-  if (title) els.channelNow.textContent = title;
 }
 
 function onPlayerStateChange(e) {
-  const { PlayerState } = tv.YT;
-
-  if (e.data === PlayerState.PLAYING) {
-    updateNowPlaying();
-
-    // Mode 'latest': jaga agar pemutar tidak pindah ke video lain di playlist
-    if (VIDEO.MODE === 'latest' && tv.targetId) {
-      const currentId = tv.player.getVideoData?.().video_id;
-      if (currentId && currentId !== tv.targetId) tv.player.loadVideoById(tv.targetId);
-    }
-  }
-
-  if (e.data === PlayerState.ENDED && VIDEO.MODE === 'latest') {
-    const dueRefresh = Date.now() - tv.loadedAt > VIDEO.REFRESH_MINUTES * 60 * 1000;
-    if (dueRefresh) {
-      // Muat ulang playlist agar video baru dari BMKG ikut terambil
-      loadLatest().catch(handleFatal);
-    } else {
-      tv.player.seekTo(0, true);
-      tv.player.playVideo();
-    }
+  // Loop: video selesai -> putar lagi dari awal
+  if (e.data === tv.YT.PlayerState.ENDED) {
+    tv.player.seekTo(0, true);
+    tv.player.playVideo();
   }
 }
 
 function onPlayerError(e) {
   // 100 = video dihapus/privat, 101/150 = pemilik melarang embed
-  console.warn('[YouTube Player] kode error', e.data);
-
-  if (VIDEO.MODE === 'playlist') {
-    tv.player.nextVideo();
-    return;
-  }
-
-  const nextPos = tv.pos + 1;
-  if (nextPos < Math.min(tv.candidates.length, 10)) {
-    playCandidate(nextPos);   // coba video terbaru berikutnya
+  console.warn('[YouTube Player] kode error', e.data, tv.videos[tv.pos]?.id);
+  if (tv.pos + 1 < tv.videos.length) {
+    playVideo(tv.pos + 1);   // coba video cadangan (hari sebelumnya)
   } else {
-    handleFatal(new Error('Video di playlist tidak dapat diputar di situs ini (embed dinonaktifkan).'));
+    showState('Video belum dapat ditampilkan', 'Video tidak dapat diputar di situs ini.', { isError: true, withLink: true });
+    els.channelNow.textContent = 'Video tidak tersedia';
   }
 }
 
-function handleFatal(err) {
-  console.error('[Video]', err);
-  els.state.hidden = false;
-  els.state.classList.add('is-error');
-  els.state.innerHTML = '';
+/** Cek video.json; bila video terbaru berubah, langsung pindah. */
+async function checkForNewVideo() {
+  let videos;
+  try {
+    videos = await fetchVideoList();
+  } catch (err) {
+    console.warn('[Video] gagal mengecek video baru:', err.message);
+    return;
+  }
+  if (!videos.length) return;
 
-  const strong = document.createElement('strong');
-  strong.textContent = 'Video belum dapat ditampilkan';
-  const p = document.createElement('p');
-  p.textContent = err.message || 'Terjadi kesalahan.';
-  const a = document.createElement('a');
-  a.href = `https://www.youtube.com/playlist?list=${encodeURIComponent(VIDEO.PLAYLIST_ID)}`;
-  a.target = '_blank';
-  a.rel = 'noopener';
-  a.textContent = 'Buka playlist di YouTube';
-  els.state.append(strong, p, a);
-
-  els.channelNow.textContent = 'Video tidak tersedia';
+  const isNew = videos[0].id !== tv.videos[0]?.id;
+  tv.videos = videos;
+  if (isNew) await playVideo(0);
 }
 
 async function initVideo() {
   try {
     tv.YT = await loadYouTubeApi();
-    if (VIDEO.MODE === 'playlist') {
-      await createPlayer();
-    } else {
-      await loadLatest();
+    await checkForNewVideo();
+    if (!tv.videos.length) {
+      showState('Menunggu video terbaru',
+        'Daftar video belum tersedia. Halaman akan mengecek ulang secara otomatis.');
     }
   } catch (err) {
-    handleFatal(err);
+    console.error('[Video]', err);
+    showState('Video belum dapat ditampilkan', err.message, { isError: true, withLink: true });
+    els.channelNow.textContent = 'Video tidak tersedia';
   }
+  setInterval(checkForNewVideo, VIDEO.POLL_MINUTES * 60 * 1000);
 }
 
 /* =========================================================
@@ -551,43 +537,66 @@ function renderWeather({ lokasi, slots }) {
   els.wxNext.replaceChildren(...next.map(s => hourCard(s, zoneLabel)));
 }
 
-function renderWeatherError() {
+/** Terjemahkan error teknis menjadi penyebab yang mudah dipahami. */
+function describeFetchError(err) {
+  if (err?.name === 'TimeoutError' || err?.name === 'AbortError') return 'server BMKG tidak merespons (timeout)';
+  if (err instanceof TypeError) return 'diblokir browser (CORS) atau koneksi terputus';
+  if (err instanceof SyntaxError) return 'respons bukan JSON yang valid';
+  return err?.message || 'kesalahan tidak diketahui';
+}
+
+function renderWeatherError(errors = []) {
   els.wxPanel.dataset.state = 'error';
   els.wxIcon.hidden = true;
   els.wxTime.textContent = '';
   els.wxDesc.textContent = 'Prakiraan cuaca belum dapat dimuat. Informasi lengkap di www.bmkg.go.id';
   els.wxLoc.textContent = '';
+
+  // Rincian penyebab per sumber (membantu diagnosis; detail lengkap ada di Console F12)
+  const detail = document.createElement('li');
+  detail.className = 'wx-error-detail';
+  detail.textContent = errors
+    .map(e => `${new URL(e.url).hostname}: ${describeFetchError(e.error)}`)
+    .join(' | ');
+  els.wxChips.replaceChildren(detail);
 }
 
 async function fetchForecast() {
-  let lastError;
+  const errors = [];
   for (const base of WEATHER.SOURCES) {
+    const url = base + encodeURIComponent(WEATHER.ADM4);
     try {
-      const res = await fetch(base + encodeURIComponent(WEATHER.ADM4), {
-        headers: { Accept: 'application/json' },
-        signal: AbortSignal.timeout(10000),
-      });
+      const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return parseForecast(await res.json());
-    } catch (err) {
-      // TypeError "Failed to fetch" umumnya = diblokir CORS / jaringan
-      console.warn('[Cuaca]', base, err.message);
-      lastError = err;
+    } catch (error) {
+      console.warn('[Cuaca] gagal:', url, error);
+      errors.push({ url, error });
     }
   }
-  throw lastError;
+  const err = new Error('Semua sumber prakiraan gagal.');
+  err.details = errors;
+  throw err;
 }
 
-const weather = { data: null };
+const weather = { data: null, retryTimer: null };
 
 async function updateWeather() {
+  clearTimeout(weather.retryTimer);
   try {
     weather.data = await fetchForecast();
-  } catch {
-    if (!weather.data) return renderWeatherError();
+  } catch (err) {
+    // Coba lagi lebih cepat (1 menit) daripada menunggu jadwal refresh berikutnya
+    weather.retryTimer = setTimeout(updateWeather, 60 * 1000);
+    if (!weather.data) return renderWeatherError(err.details);
     // gagal memperbarui: tetap tampilkan data terakhir
   }
-  renderWeather(weather.data);
+  try {
+    renderWeather(weather.data);
+  } catch (err) {
+    console.error('[Cuaca] gagal menampilkan data:', err, weather.data);
+    renderWeatherError([{ url: location.href, error: new Error(`format data tidak dikenali (${err.message})`) }]);
+  }
 }
 
 function startWeather() {

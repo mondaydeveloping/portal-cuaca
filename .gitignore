@@ -1,7 +1,3 @@
-# Rahasia lokal — JANGAN di-commit
-.dev.vars
-.env*
-
 node_modules/
-.wrangler/
+_site/
 .DS_Store
