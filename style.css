@@ -202,6 +202,19 @@ h1, h2, h3 { font-family: var(--font-head); line-height: 1.25; margin: 0; }
 
 /* --- Layar video --- */
 .channel-screen { position: relative; flex: 1; min-height: 0; background: #000; }
+/* Tombol aktifkan suara (muncul bila browser memblokir autoplay bersuara) */
+.sound-btn {
+  position: absolute; left: 50%; bottom: 72px; transform: translateX(-50%); z-index: 2;
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 12px 22px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--yellow); color: var(--navy-900);
+  font: 700 16px/1 var(--font-body); box-shadow: 0 6px 20px rgba(0,0,0,.35);
+  animation: sound-pulse 2s ease-in-out infinite;
+}
+.sound-btn:hover { background: #ffc61a; }
+.sound-btn svg { width: 22px; height: 22px; fill: currentColor; }
+@keyframes sound-pulse { 50% { box-shadow: 0 6px 20px rgba(0,0,0,.35), 0 0 0 8px rgba(245,180,0,.35); } }
+
 /* Pemutar tersembunyi untuk membaca daftar video playlist upload */
 .yt-probe { position: fixed; left: -10px; top: -10px; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
 .channel-screen iframe,

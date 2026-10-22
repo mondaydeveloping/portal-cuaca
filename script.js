@@ -16,8 +16,12 @@ const VIDEO = {
 };
 
 const PLAYER = {
-  AUTOPLAY_MUTED:    true,   // browser hanya mengizinkan autoplay bila tanpa suara
-  NATIVE_FULLSCREEN: false,  // sembunyikan tombol fullscreen YouTube agar jam & running text tetap tampil
+  // true = coba putar dengan suara. Bila browser memblokir (aturan autoplay browser),
+  // video tetap jalan tanpa suara dan muncul tombol "Aktifkan suara"; suara juga
+  // otomatis menyala pada klik/tombol keyboard pertama di halaman.
+  SOUND_ON:          true,
+  VOLUME:            100,    // 0–100
+  NATIVE_FULLSCREEN: false,  // sembunyikan tombol fullscreen YouTube agar jam & panel cuaca tetap tampil
 };
 
 const CLOCK = {
@@ -53,6 +57,7 @@ const els = {
   state:       document.getElementById('video-state'),
   channelNow:  document.getElementById('channel-now'),
   channelFor:  document.getElementById('channel-for'),
+  soundBtn:    document.getElementById('sound-btn'),
   fsBtn:       document.getElementById('fs-toggle'),
   clockTime:   document.getElementById('clock-time'),
   clockZone:   document.getElementById('clock-zone'),
@@ -365,8 +370,8 @@ function createPlayer(videoId) {
       host: 'https://www.youtube-nocookie.com',
       videoId,
       playerVars: {
-        autoplay: PLAYER.AUTOPLAY_MUTED ? 1 : 0,
-        mute: PLAYER.AUTOPLAY_MUTED ? 1 : 0,
+        autoplay: 1,
+        mute: PLAYER.SOUND_ON ? 0 : 1,
         rel: 0,
         playsinline: 1,
         fs: PLAYER.NATIVE_FULLSCREEN ? 1 : 0,
@@ -376,6 +381,10 @@ function createPlayer(videoId) {
         onReady: () => {
           player.getIframe().title = 'Pemutar video prakiraan cuaca';
           els.state.hidden = true;
+          if (PLAYER.SOUND_ON) {
+            player.setVolume(PLAYER.VOLUME);
+            ensurePlaying(player);
+          }
           resolve(player);
         },
         onStateChange: onPlayerStateChange,
@@ -401,6 +410,8 @@ async function playVideo(pos) {
 function onPlayerStateChange(e) {
   const { PlayerState } = tv.YT;
 
+  if (e.data === PlayerState.PLAYING) updateSoundButton();
+
   // Judul belum diketahui (sumber playlist upload): ambil dari pemutar
   if (e.data === PlayerState.PLAYING) {
     const video = tv.videos[tv.pos];
@@ -417,6 +428,52 @@ function onPlayerStateChange(e) {
     tv.player.seekTo(0, true);
     tv.player.playVideo();
   }
+}
+
+/* ---------- Suara ----------
+   Browser hanya mengizinkan video bersuara diputar otomatis bila pengunjung sudah
+   berinteraksi dengan halaman (atau browser diatur mengizinkannya). Halaman mencoba
+   bersuara dulu; bila ditolak, putar tanpa suara dan tawarkan tombol "Aktifkan suara". */
+
+function ensurePlaying(player) {
+  setTimeout(() => {
+    const { PLAYING, BUFFERING } = tv.YT.PlayerState;
+    const state = player.getPlayerState?.();
+    if (state !== PLAYING && state !== BUFFERING) {
+      // Autoplay bersuara diblokir -> putar tanpa suara
+      player.mute();
+      player.playVideo();
+    }
+    updateSoundButton();
+  }, 2500);
+}
+
+function updateSoundButton() {
+  if (!PLAYER.SOUND_ON || !tv.player) return;
+  els.soundBtn.hidden = !tv.player.isMuted?.();
+}
+
+function enableSound() {
+  if (!PLAYER.SOUND_ON || !tv.player) return;
+  tv.player.unMute();
+  tv.player.setVolume(PLAYER.VOLUME);
+  const { PLAYING, BUFFERING } = tv.YT.PlayerState;
+  if (![PLAYING, BUFFERING].includes(tv.player.getPlayerState?.())) tv.player.playVideo();
+  els.soundBtn.hidden = true;
+}
+
+function setupSound() {
+  if (!PLAYER.SOUND_ON) return;
+  els.soundBtn.addEventListener('click', enableSound);
+  // Interaksi pertama di mana pun pada halaman juga menyalakan suara
+  const unlock = () => {
+    if (!tv.player) return;   // pemutar belum siap: tunggu interaksi berikutnya
+    enableSound();
+    document.removeEventListener('pointerdown', unlock, true);
+    document.removeEventListener('keydown', unlock, true);
+  };
+  document.addEventListener('pointerdown', unlock, true);
+  document.addEventListener('keydown', unlock, true);
 }
 
 function onPlayerError(e) {
@@ -813,5 +870,6 @@ els.year.textContent = new Date().getFullYear();
 startClock();
 setupFullscreen();
 setupNav();
+setupSound();
 initVideo();
 startWeather();
