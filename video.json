@@ -1,4 +1,23 @@
 {
   "channelId": "UC8Do0tOnpnz1ydOZV0XKS3g",
-  "videos": []
+  "videos": [
+    {
+      "id": "HtQFxw5beEI",
+      "title": "Prakiraan Cuaca Esok Hari, Jumat, 23 Oktober 2026",
+      "publishedAt": "2026-10-22T07:59:39.000Z",
+      "forecastDate": "2026-10-23"
+    },
+    {
+      "id": "dbJVdGU8oPQ",
+      "title": "Prakiraan Cuaca Esok Hari, Kamis, 22 Oktober 2026",
+      "publishedAt": "2026-10-21T08:52:19.000Z",
+      "forecastDate": "2026-10-22"
+    },
+    {
+      "id": "O9yhVr9Xt6s",
+      "title": "Prakiraan Cuaca Esok Hari Rabu, 21 Oktober 2026",
+      "publishedAt": "2026-10-20T08:16:08.000Z",
+      "forecastDate": "2026-10-21"
+    }
+  ]
 }
