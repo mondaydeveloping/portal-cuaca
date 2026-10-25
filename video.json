@@ -2,6 +2,12 @@
   "channelId": "UC8Do0tOnpnz1ydOZV0XKS3g",
   "videos": [
     {
+      "id": "Jv07awqLLNA",
+      "title": "Prakiraan Cuaca Esok Hari, Senin, 26 Oktober 2026",
+      "publishedAt": "2026-10-25T08:29:30.000Z",
+      "forecastDate": "2026-10-26"
+    },
+    {
       "id": "B89L_pl0Id8",
       "title": "Prakiraan Cuaca Esok Hari, Minggu, 25 Oktober 2026",
       "publishedAt": "2026-10-24T08:53:21.000Z",
@@ -11,12 +17,6 @@
       "id": "s9gzlxOLTio",
       "title": "Potensi Hujan Indonesia Sepekan ke Depan yang berlaku dari tanggal 23 - 29 Oktober 2026",
       "publishedAt": "2026-10-23T12:48:00.000Z",
-      "forecastDate": null
-    },
-    {
-      "id": "XfFIEBjyZkg",
-      "title": "Prakiraan Cuaca Jumat. 23 Oktober 2026 - Edisi khusus Kepala BPGMN",
-      "publishedAt": "2026-10-23T12:36:56.000Z",
       "forecastDate": null
     }
   ]
