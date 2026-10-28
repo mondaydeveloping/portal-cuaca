@@ -2,6 +2,12 @@
   "channelId": "UC8Do0tOnpnz1ydOZV0XKS3g",
   "videos": [
     {
+      "id": "0EB3lorBuII",
+      "title": "Prakiraan Cuaca Esok Hari Kamis, 29 Oktober 2026",
+      "publishedAt": "2026-10-28T08:41:23.000Z",
+      "forecastDate": "2026-10-29"
+    },
+    {
       "id": "vdW_BhTH4X4",
       "title": "Prakiraan Cuaca Esok Hari, Rabu, 28 Oktober 2026",
       "publishedAt": "2026-10-27T09:23:05.000Z",
@@ -12,12 +18,6 @@
       "title": "Prakiraan Cuaca Esok Hari, Selasa, 27 Oktober 2026",
       "publishedAt": "2026-10-26T07:42:42.000Z",
       "forecastDate": "2026-10-27"
-    },
-    {
-      "id": "Jv07awqLLNA",
-      "title": "Prakiraan Cuaca Esok Hari, Senin, 26 Oktober 2026",
-      "publishedAt": "2026-10-25T08:29:30.000Z",
-      "forecastDate": "2026-10-26"
     }
   ]
 }
