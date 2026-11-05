@@ -2,6 +2,12 @@
   "channelId": "UC8Do0tOnpnz1ydOZV0XKS3g",
   "videos": [
     {
+      "id": "1cfj-_uauPA",
+      "title": "Prakiraan Cuaca Esok Hari, Jumat, 06 November 2026",
+      "publishedAt": "2026-11-05T06:51:49.000Z",
+      "forecastDate": "2026-11-06"
+    },
+    {
       "id": "70dzcokcOMI",
       "title": "Prakiraan Cuaca Esok Hari, Kamis, 05 November 2026",
       "publishedAt": "2026-11-04T08:20:07.000Z",
@@ -12,12 +18,6 @@
       "title": "Prakiraan Cuaca Esok Hari, Rabu, 04 November 2026",
       "publishedAt": "2026-11-03T08:18:40.000Z",
       "forecastDate": "2026-11-04"
-    },
-    {
-      "id": "H2e9JF0KKPg",
-      "title": "Prediksi Iklim Dasarian I November 2026",
-      "publishedAt": "2026-11-03T06:54:54.000Z",
-      "forecastDate": null
     }
   ]
 }
