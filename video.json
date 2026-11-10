@@ -2,6 +2,12 @@
   "channelId": "UC8Do0tOnpnz1ydOZV0XKS3g",
   "videos": [
     {
+      "id": "bMA6Yer8L3E",
+      "title": "Prakiraan Cuaca Esok Hari, Rabu, 11 November 2026",
+      "publishedAt": "2026-11-10T05:30:17.000Z",
+      "forecastDate": "2026-11-11"
+    },
+    {
       "id": "zH01O4EcULI",
       "title": "Prakiraan Cuaca Esok Hari, Selasa, 10 November 2026",
       "publishedAt": "2026-11-09T08:29:53.000Z",
@@ -12,12 +18,6 @@
       "title": "Prakiraan Cuaca Esok Hari, Senin, 09 November 2026",
       "publishedAt": "2026-11-08T06:15:29.000Z",
       "forecastDate": "2026-11-09"
-    },
-    {
-      "id": "XF9nvABmOV0",
-      "title": "Prakiraan Cuaca Esok Hari, Minggu, 08 November 2026",
-      "publishedAt": "2026-11-07T07:08:52.000Z",
-      "forecastDate": "2026-11-08"
     }
   ]
 }
