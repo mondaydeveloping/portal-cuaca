@@ -2,6 +2,12 @@
   "channelId": "UC8Do0tOnpnz1ydOZV0XKS3g",
   "videos": [
     {
+      "id": "YjEQZRC3PmY",
+      "title": "Prakiraan Cuaca Esok Hari, Senin, 16 November 2026",
+      "publishedAt": "2026-11-15T06:16:04.000Z",
+      "forecastDate": "2026-11-16"
+    },
+    {
       "id": "cQ-ULTblDjI",
       "title": "Prakiraan Cuaca Esok Hari, Minggu, 15 November 2026",
       "publishedAt": "2026-11-14T05:46:32.000Z",
@@ -11,12 +17,6 @@
       "id": "P1bYguRNsSc",
       "title": "Potensi Hujan Indonesia Sepekan ke Depan 13 - 19 November 2026",
       "publishedAt": "2026-11-13T13:52:51.000Z",
-      "forecastDate": null
-    },
-    {
-      "id": "QyWn1cvv9h8",
-      "title": "Prediksi Iklim Dasarian II November 2026",
-      "publishedAt": "2026-11-13T12:26:15.000Z",
       "forecastDate": null
     }
   ]
