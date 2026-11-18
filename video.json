@@ -2,6 +2,12 @@
   "channelId": "UC8Do0tOnpnz1ydOZV0XKS3g",
   "videos": [
     {
+      "id": "q7YG4m9pTEc",
+      "title": "Prakiraan Cuaca Esok Hari, Kamis, 19 November 2026.",
+      "publishedAt": "2026-11-18T06:34:46.000Z",
+      "forecastDate": "2026-11-19"
+    },
+    {
       "id": "y-_uXDz-Bg4",
       "title": "Pemanfaatan Data Iklim sebagai Dasar Perancangan Bangunan Hemat Energi",
       "publishedAt": "2026-11-17T08:35:46.000Z",
@@ -12,12 +18,6 @@
       "title": "Prakiraan Cuaca Esok Hari, Rabu, 18 November 2026.",
       "publishedAt": "2026-11-17T06:23:39.000Z",
       "forecastDate": "2026-11-18"
-    },
-    {
-      "id": "EQWqmLlPvdw",
-      "title": "OMC Bisa Menghentikan Hujan dan Mengatasi Kekeringan? Ini Faktanya! | Bincang OMC Bersama BMKG",
-      "publishedAt": "2026-11-16T10:07:39.000Z",
-      "forecastDate": null
     }
   ]
 }
