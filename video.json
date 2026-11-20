@@ -2,22 +2,22 @@
   "channelId": "UC8Do0tOnpnz1ydOZV0XKS3g",
   "videos": [
     {
+      "id": "fLarg3JU-50",
+      "title": "Potensi Hujan Indonesia Sepekan ke Depan 20 - 26 November 2026",
+      "publishedAt": "2026-11-20T13:48:37.000Z",
+      "forecastDate": null
+    },
+    {
+      "id": "Oflcj0L3UBE",
+      "title": "Prakiraan Cuaca Esok Hari, Sabtu, 21 November 2026",
+      "publishedAt": "2026-11-20T08:30:26.000Z",
+      "forecastDate": "2026-11-21"
+    },
+    {
       "id": "S914XN7mUVo",
       "title": "Prakiraan Cuaca Esok Hari, Jumat, 20 November 2026",
       "publishedAt": "2026-11-19T05:40:19.000Z",
       "forecastDate": "2026-11-20"
-    },
-    {
-      "id": "q7YG4m9pTEc",
-      "title": "Prakiraan Cuaca Esok Hari, Kamis, 19 November 2026.",
-      "publishedAt": "2026-11-18T06:34:46.000Z",
-      "forecastDate": "2026-11-19"
-    },
-    {
-      "id": "y-_uXDz-Bg4",
-      "title": "Pemanfaatan Data Iklim sebagai Dasar Perancangan Bangunan Hemat Energi",
-      "publishedAt": "2026-11-17T08:35:46.000Z",
-      "forecastDate": null
     }
   ]
 }
