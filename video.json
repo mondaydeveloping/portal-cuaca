@@ -2,6 +2,12 @@
   "channelId": "UC8Do0tOnpnz1ydOZV0XKS3g",
   "videos": [
     {
+      "id": "AAvIFXliRxY",
+      "title": "Prakiraan Cuaca Esok Hari, Senin, 23 November 2026",
+      "publishedAt": "2026-11-22T08:47:01.000Z",
+      "forecastDate": "2026-11-23"
+    },
+    {
       "id": "iLLz9o4nvr0",
       "title": "Prakiraan Cuaca Esok Hari, Minggu, 22 November 2026.",
       "publishedAt": "2026-11-21T06:44:31.000Z",
@@ -12,12 +18,6 @@
       "title": "Potensi Hujan Indonesia Sepekan ke Depan 20 - 26 November 2026",
       "publishedAt": "2026-11-20T13:48:37.000Z",
       "forecastDate": null
-    },
-    {
-      "id": "Oflcj0L3UBE",
-      "title": "Prakiraan Cuaca Esok Hari, Sabtu, 21 November 2026",
-      "publishedAt": "2026-11-20T08:30:26.000Z",
-      "forecastDate": "2026-11-21"
     }
   ]
 }
