@@ -2,6 +2,12 @@
   "channelId": "UC8Do0tOnpnz1ydOZV0XKS3g",
   "videos": [
     {
+      "id": "d5udNwp42Co",
+      "title": "Prakiraan Cuaca Esok Hari, Kamis, 26 November 2026",
+      "publishedAt": "2026-11-25T06:32:14.000Z",
+      "forecastDate": "2026-11-26"
+    },
+    {
       "id": "MjRMG2UATuU",
       "title": "Prakiraan Cuaca Esok Hari - Edisi khusus wilayah Maluku Utara",
       "publishedAt": "2026-11-24T11:24:03.000Z",
@@ -11,12 +17,6 @@
       "id": "4eRZTeUZk6I",
       "title": "Berikut disampaikan tayangan update Prakiraan Cuaca Esok Hari, Rabu, 25 November 2026",
       "publishedAt": "2026-11-24T08:31:31.000Z",
-      "forecastDate": null
-    },
-    {
-      "id": "FyPJJYqWbZw",
-      "title": "Progress in Drought Early Warning and Prediction",
-      "publishedAt": "2026-11-24T08:09:22.000Z",
       "forecastDate": null
     }
   ]
